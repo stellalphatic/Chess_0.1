@@ -69,8 +69,12 @@ const renderBoard = ()=>{
   });
 };
 
-const handleMove = ()=>{
-
+const handleMove = (source,target)=>{
+  const move ={
+    from: `${String.fromCharCode(97+source.col)}${8-source.row}`, //getting correct format of move e.g. ...(97+0)='a'
+    to: `${String.fromCharCode(97+target.col)}${8-target.row}`,
+    promotion: 'q' // if pawn reaches end it will be promoted to queen
+  }
 };
 
 const getPieceUnicode = (piece)=>{
@@ -92,5 +96,25 @@ const getPieceUnicode = (piece)=>{
 
       return unicodePieces[key] || "";
 };
+
+socket.on("playerRole",(role)=>{
+   playerRole=role;
+   renderBoard();
+});
+
+socket.on("spectator",()=>{
+    playerRole = null;
+    renderBoard();
+ });
+ 
+ socket.on("boardState",(fen)=>{
+    chess.load(fen);
+    renderBoard();
+ });
+
+ socket.on("move",(move)=>{
+    chess.move(move);
+    renderBoard();
+ });
 
 renderBoard();
