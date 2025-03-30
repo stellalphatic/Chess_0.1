@@ -28,15 +28,43 @@ const renderBoard = ()=>{
         {
         const pieceElement= document.createElement("div");
         pieceElement.classList.add("piece", square.color==='w' ? "white" : "black");
-        pieceElement.innerText = "";
-        pieceElement.draggable= playerRole===square.color;
-        pieceElement.addEventListener("dragstart",()=>{
+
+        pieceElement.innerText = getPieceUnicode(square);
+        pieceElement.draggable = playerRole===square.color;
+
+        pieceElement.addEventListener("dragstart",(e)=>{
             if(pieceElement.draggable) {
                 draggedPiece= pieceElement;
                 sourcePiece={row:rowindex,col: squareindex};
+                e.dataTransfer.setData("text/plain",""); // ensures no problem to come in drag
              }
           });
+
+          pieceElement.addEventListener("dragend",(e)=>{
+           draggedPiece= null;
+           sourcePiece= null;
+          });
+
+
+          squareElement.appendChild(pieceElement);
         }
+
+       squareElement.addEventListener("dragover",(e)=>{
+            e.preventDefault(); // Don't do default functionalities of dragover
+       });
+
+       squareElement.addEventListener("drop",(e)=>{
+        e.preventDefault();  // don't do default functionalities of drop
+        if(draggedPiece){
+            const targetSource={
+                row: parseInt(squareElement.dataset.row),
+                col: parseInt(squareElement.dataset.col)
+            };
+            handleMove(sourceSquare,targetSource);
+        }
+       });
+
+       boardElement.appendChild(squareElement);
     });
   });
 };
@@ -45,8 +73,24 @@ const handleMove = ()=>{
 
 };
 
-const getPieceUnicode = ()=>{
+const getPieceUnicode = (piece)=>{
+    const unicodePieces = {
+        'p': '♟', // Black Pawn
+        'n': '♞', // Black Knight
+        'b': '♝', // Black Bishop
+        'r': '♜', // Black Rook
+        'q': '♛', // Black Queen
+        'k': '♚', // Black King
+        'P': '♙', // White Pawn
+        'N': '♘', // White Knight
+        'B': '♗', // White Bishop
+        'R': '♖', // White Rook
+        'Q': '♕', // White Queen
+        'K': '♔', // White King
+      };
+      const key = piece.color === 'w' ? piece.type.toUpperCase() : piece.type;
 
+      return unicodePieces[key] || "";
 };
 
 renderBoard();
