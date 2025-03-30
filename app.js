@@ -20,3 +20,22 @@ app.use(express.static(path.join(__dirname,"public"))); // Setting static files 
 app.get("/",(req,res)=>{
    res.render("index");
 });
+
+// Socket basically creates connection from frontend(client) to backend(server) socket
+io.on("connection",(uniqueSocket)=>{
+    console.log("connected");
+   
+    uniqueSocket.on("disconnect",()=>{
+        console.log("disconnected");
+    })
+})
+
+
+
+
+
+
+
+server.listen(3000,()=>{
+    console.log("server started at port 3000");
+});
