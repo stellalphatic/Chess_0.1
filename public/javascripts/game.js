@@ -12,16 +12,32 @@ let draggedPiece =null;
 let sourcePiece = null;
 let playerRole = null;
 
-const updateMoveHistory = () => {
-    const history = chess.history({ verbose: true });
+const updateMoveHistory = (history) => {
+    const moveHistoryElement = document.getElementById("moveHistory");
+    moveHistoryElement.innerHTML = ""; // Clear previous history
 
-        const Move = history[0] ? history[0].san : "";
+    for (let i = 0; i < history.length; i += 2) {
         const moveRow = document.createElement("div");
-        moveRow.innerHTML = `<strong>${moveCount}.</strong> ${Move} `;
-        moveHistoryElement.appendChild(moveRow);
+        moveRow.classList.add("grid", "grid-cols-2", "gap-2", "p-1");
 
-    moveCount++;
+        const whiteMove = document.createElement("div");
+        whiteMove.classList.add("bg-gray-700", "p-2", "rounded");
+        whiteMove.innerHTML = `<strong>${Math.floor(i / 2) + 1}.</strong> ${history[i] || ""}`;
+
+        const blackMove = document.createElement("div");
+        blackMove.classList.add("bg-gray-600", "p-2", "rounded");
+        blackMove.innerHTML = history[i + 1] || "";
+
+        moveRow.appendChild(whiteMove);
+        moveRow.appendChild(blackMove);
+        moveHistoryElement.appendChild(moveRow);
+    }
 };
+
+socket.on("moveHistory", (history) => {
+    updateMoveHistory(history);
+});
+
 
 // document.getElementById("resetGame").addEventListener("click", () => {
 //     socket.emit("resetGame");
@@ -135,9 +151,10 @@ socket.on("playerRole",(role)=>{
    if (role === "b") boardElement.classList.add("flipped");
 });
 
-socket.on("spectator",()=>{
+ socket.on("spectator",()=>{
     playerRole = null;
     renderBoard();
+
  });
  
  socket.on("boardState",(fen)=>{
@@ -170,7 +187,7 @@ socket.on("spectator",()=>{
  socket.on("move", (move) => {
     chess.move(move);
     renderBoard();
-    updateMoveHistory();
+    
 });
 
 renderBoard();
