@@ -5,13 +5,43 @@ const socket = io();  //if the front is not in the same domain as server then yo
 
 const chess = new Chess();
 const boardElement = document.querySelector(".chessboard");
+const moveHistoryElement = document.getElementById("moveHistory");
+let moveCount=1;
 
 let draggedPiece =null;
 let sourcePiece = null;
 let playerRole = null;
 
+const updateMoveHistory = () => {
+    const history = chess.history({ verbose: true });
+
+        const Move = history[0] ? history[0].san : "";
+        const moveRow = document.createElement("div");
+        moveRow.innerHTML = `<strong>${moveCount}.</strong> ${Move} `;
+        moveHistoryElement.appendChild(moveRow);
+
+    moveCount++;
+};
+
+// document.getElementById("resetGame").addEventListener("click", () => {
+//     socket.emit("resetGame");
+// });
+
+// socket.on("resetGame", () => {
+//     chess.reset();
+//     renderBoard();
+// });
+
 const renderBoard = ()=>{
-  const board = chess.board();
+    // Changing turn indicator
+    const turnElement = document.getElementById("turn");
+    socket.on("boardState", (fen) => {
+        chess.load(fen);
+        renderBoard();
+        turnElement.textContent = chess.turn() === "w" ? "White" : "Black";
+    });
+    const board = chess.board();
+
   boardElement.innerHTML="";
   board.forEach((row, rowindex) => {
     row.forEach((square,squareindex)=>{
@@ -35,14 +65,14 @@ const renderBoard = ()=>{
         pieceElement.addEventListener("dragstart",(e)=>{
             if(pieceElement.draggable) {
                 draggedPiece= pieceElement;
-                sourcePiece={row:rowindex,col: squareindex};
+                sourceSquare={row:rowindex,col: squareindex};
                 e.dataTransfer.setData("text/plain",""); // ensures no problem to come in drag
              }
           });
 
           pieceElement.addEventListener("dragend",(e)=>{
            draggedPiece= null;
-           sourcePiece= null;
+           sourceSquare= null;
           });
 
 
@@ -74,7 +104,9 @@ const handleMove = (source,target)=>{
     from: `${String.fromCharCode(97+source.col)}${8-source.row}`, //getting correct format of move e.g. ...(97+0)='a'
     to: `${String.fromCharCode(97+target.col)}${8-target.row}`,
     promotion: 'q' // if pawn reaches end it will be promoted to queen
-  }
+  };
+
+  socket.emit("move",move);
 };
 
 const getPieceUnicode = (piece)=>{
@@ -100,6 +132,7 @@ const getPieceUnicode = (piece)=>{
 socket.on("playerRole",(role)=>{
    playerRole=role;
    renderBoard();
+   if (role === "b") boardElement.classList.add("flipped");
 });
 
 socket.on("spectator",()=>{
@@ -108,13 +141,36 @@ socket.on("spectator",()=>{
  });
  
  socket.on("boardState",(fen)=>{
+
+    const checkGameOver = () => {
+        if (chess.isCheckmate()) {
+            alert(`Checkmate! ${chess.turn() === "w" ? "Black" : "White"} wins.`);
+            socket.emit("gameOver");
+        } else if (chess.isDraw()) {
+            alert("Game Drawn!");
+            socket.emit("gameOver");
+        }
+    };
+    
+    socket.on("boardState", (fen) => {
+        chess.load(fen);
+        renderBoard();
+        turnElement.textContent = chess.turn() === "w" ? "White" : "Black";
+        checkGameOver();
+    });
+    
+    socket.on("gameOver", () => {
+        alert("Game over!");
+    });
+
     chess.load(fen);
     renderBoard();
  });
 
- socket.on("move",(move)=>{
+ socket.on("move", (move) => {
     chess.move(move);
     renderBoard();
- });
+    updateMoveHistory();
+});
 
 renderBoard();
