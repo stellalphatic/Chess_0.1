@@ -5,10 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
   </head>
   <body>
-    <div class="w-full h-screen flex justify-center items-center bg-zinc-800">
-      <div class="chessboard w-100 h-100 bg-red-400"></div>
+    <div
+      class="w-full h-screen flex justify-center items-center bg-zinc-800 gap-2"
+    >
+      <div class="turn-indicator text-white text-xl mb-4">
+        Current Turn: <span id="turn">White</span>
+      </div>
+
+      <div class="chessboard w-120 h-120 bg-red-400"></div>
+      <div
+        class="move-history-container bg-gray-800 p-4 text-white rounded-lg w-50"
+      >
+        <h2 class="text-lg font-bold">Move History</h2>
+        <div id="moveHistory" class="grid grid-cols-2 gap-2"></div>
+      </div>
     </div>
 
     <!-- Socket.io cdn -->
