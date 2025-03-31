@@ -13,6 +13,7 @@ const chess = new Chess();
 
 let players ={};
 let currentPlayer="w";
+let moveHistory = []; 
 
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname,"public"))); // Setting static files location
@@ -35,7 +36,11 @@ io.on("connection",(Socket)=>{
     }
     else{
         Socket.emit("spectator");
+        Socket.emit("moveHistory", moveHistory);
     }
+  // Send  current board state and move history to the new user
+    Socket.emit("boardState", chess.fen());
+    Socket.emit("moveHistory", moveHistory);
 
     // If any user exit or disconnects from server
     Socket.on("disconnect",()=>{
@@ -46,7 +51,7 @@ io.on("connection",(Socket)=>{
             delete players.black;
         }
     });
-
+  
     // Validating moves
     Socket.on("move",(move)=>{
         try{
@@ -58,8 +63,10 @@ io.on("connection",(Socket)=>{
            // if move is valid
            if(isValid){
             currentPlayer = chess.turn();
+            moveHistory.push(isValid.san);  //Storing move in history
             io.emit("move",move);
             io.emit("boardState",chess.fen()) // Sending current state of board to evryone in FEN notation 
+            io.emit("moveHistory", moveHistory);  //Send updated move history to all clients
            }
            // if invalid move
            else{
@@ -73,7 +80,13 @@ io.on("connection",(Socket)=>{
             Socket.emit("invalidMove",move);
         }
     });
+
+    Socket.on("resetGame", () => {
+        chess.reset();
+        io.emit("resetGame");
+    });
 })
+// socket.emit() - to send an event........  socket.on() - to receive(listen) and respond to an event
 
 
 
