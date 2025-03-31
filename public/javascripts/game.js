@@ -8,6 +8,7 @@ const boardElement = document.querySelector(".chessboard");
 const moveHistoryElement = document.getElementById("moveHistory");
 let moveCount=1;
 
+
 let draggedPiece =null;
 let sourcePiece = null;
 let playerRole = null;
@@ -38,15 +39,6 @@ socket.on("moveHistory", (history) => {
     updateMoveHistory(history);
 });
 
-
-// document.getElementById("resetGame").addEventListener("click", () => {
-//     socket.emit("resetGame");
-// });
-
-// socket.on("resetGame", () => {
-//     chess.reset();
-//     renderBoard();
-// });
 
 const renderBoard = ()=>{
     // Changing turn indicator
@@ -189,5 +181,22 @@ socket.on("playerRole",(role)=>{
     renderBoard();
     
 });
+
+
+
+socket.on("gameOver", (message) => {
+    alert(message); // Show game over message
+    document.getElementById("resetButton").classList.remove("hidden"); // Show Reset button
+});
+
+document.getElementById("resetButton").addEventListener("click", () => {
+    socket.emit("resetGame"); // Tell server to reset game
+});
+// again hiding reset button after clicked
+socket.on("gameReset", () => {
+    document.getElementById("resetButton").classList.add("hidden"); // Hide Reset button
+});
+
+
 
 renderBoard();
