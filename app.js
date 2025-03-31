@@ -67,6 +67,12 @@ io.on("connection",(Socket)=>{
             io.emit("move",move);
             io.emit("boardState",chess.fen()) // Sending current state of board to evryone in FEN notation 
             io.emit("moveHistory", moveHistory);  //Send updated move history to all clients
+
+            if (chess.isCheckmate()) {
+                io.emit("gameOver", `${chess.turn() === "w" ? "Black" : "White"} wins by Checkmate!`);
+            } else if (chess.isDraw()) {
+                io.emit("gameOver", "Game Draw!");
+            }
            }
            // if invalid move
            else{
@@ -82,6 +88,12 @@ io.on("connection",(Socket)=>{
     });
 
     Socket.on("resetGame", () => {
+        chess.reset(); // Reset board
+        moveHistory = []; // Clear history
+        io.emit("boardState", chess.fen()); // Update board for all players
+        io.emit("moveHistory", moveHistory); // Clear move history for everyone
+        io.emit("gameReset"); // Notify all players to reset
+    });Socket.on("resetGame", () => {
         chess.reset();
         io.emit("resetGame");
     });
